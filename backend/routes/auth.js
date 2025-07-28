@@ -10,4 +10,6 @@ router.post("/login", authControllers.loginAccount);
 
 router.get("/profile/:userid", isAuth, authControllers.getUserDetail);
 
+router.post("/update-password", isAuth, authControllers.updatePassword);
+
 module.exports = router;

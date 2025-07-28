@@ -3,6 +3,9 @@ const AdminAccount = require("../models/adminuser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
+const speakeasy = require("speakeasy");
+const qrcode = require("qrcode");
+
 
 // Customer Registration
 exports.registerAccount = async (req, res, next) => {
@@ -22,11 +25,23 @@ exports.registerAccount = async (req, res, next) => {
       throw error;
     }
 
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
+    
+    if (!passwordRegex.test(password)) {
+      const error = new Error(
+        "Password must be 8–16 characters long and include uppercase, lowercase, number, and special character."
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+
     const hashedPass = await bcrypt.hash(password, 12);
     const user = new Customers({
       full_name: name,
       email,
       hashedpassword: hashedPass,
+      previousPasswords: [hashedPass],
+      passwordCreatedAt: new Date(),
     });
 
     const result = await user.save();
@@ -55,40 +70,62 @@ exports.registerAccount = async (req, res, next) => {
   }
 };
 
-// Customer Login
 exports.loginAccount = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
+    // Initialize failed login attempts in session if not already
+    if (!req.session.failedLoginAttempts) {
+      req.session.failedLoginAttempts = {};
+    }
+
     if (!email || !password) {
-      const error = new Error("Incomplete input.");
-      error.statusCode = 422;
-      throw error;
+      throw new Error("Incomplete input.");
+    }
+
+    // Check if this email has failed too many times
+    const failCount = req.session.failedLoginAttempts[email] || 0;
+    if (failCount >= 3) {
+      return res.status(429).json({
+        message: "Too many failed attempts. Please wait and try again.",
+        locked: true,
+      });
     }
 
     const checkuser = await Customers.findOne({ email });
     if (!checkuser) {
-      const error = new Error("This account doesn't exists!");
-      error.statusCode = 401;
-      throw error;
+      req.session.failedLoginAttempts[email] = failCount + 1;
+      throw new Error("This account doesn't exist!");
     }
 
     const checkpass = await bcrypt.compare(password, checkuser.hashedpassword);
     if (!checkpass) {
-      const error = new Error("Incorrect email or password.");
-      error.statusCode = 401;
-      throw error;
+      req.session.failedLoginAttempts[email] = failCount + 1;
+      throw new Error("Incorrect email or password.");
     }
 
-    const isAdmin = false;
-    const token = generateToken(isAdmin, {
+    // Password Expiry Check
+    const passwordCreated = new Date(checkuser.passwordCreatedAt);
+    const daysSinceCreation = Math.floor(
+      (Date.now() - passwordCreated.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    if (daysSinceCreation > 90) {
+      return res.status(403).json({
+        message: "Your password has expired. Please update your password.",
+        expired: true,
+      });
+    }
+
+    req.session.failedLoginAttempts[email] = 0;
+
+    const token = generateToken(false, {
       _id: checkuser._id,
       name: checkuser.full_name,
       email: checkuser.email,
     });
 
     res.status(200).json({
-      message: "Sucessful signed in",
+      message: "Successfully signed in",
       userdata: {
         name: checkuser.full_name,
         email,
@@ -97,10 +134,12 @@ exports.loginAccount = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    if (!error.statusCode) error.statusCode = 500;
+    error.statusCode = error.statusCode || 401;
     next(error);
   }
 };
+
+
 
 // Admin Login
 exports.adminLoginAccount = async (req, res, next) => {
@@ -195,46 +234,229 @@ const generateToken = (isAdminProfile, data) => {
 };
 
 // Admin Registration
-exports.registerAdminAccount = async (req, res, next) => {
+exports.registerAdminAccount = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Check if admin already exists
+    const existing = await AdminAccount.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ message: "Admin already exists." });
+    }
+
+    // Generate secret for MFA
+    const secret = speakeasy.generateSecret({
+  name: `Bagaicha (${email})`,
+  issuer: "Bagaicha Admin Panel",
+});
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Save admin with correct field names
+    const newAdmin = new AdminAccount({
+      email,
+      hashedpassword: hashedPassword,   
+      mfaSecret: secret.base32,         
+    });
+
+    await newAdmin.save();
+
+    // Generate QR code from MFA URL
+    const otpAuthUrl = secret.otpauth_url;
+
+    const qrDataURL = await qrcode.toDataURL(otpAuthUrl);
+
+    res.status(201).json({
+      message: "Admin registered. Scan QR for MFA.",
+      email: newAdmin.email,
+      qr: qrDataURL,
+    });
+  } catch (error) {
+    console.error("Register admin failed:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
+
+// update password
+exports.updatePassword = async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.userId;
+
+  try {
+    const user = await Customers.findById(userId);
+    if (!user) {
+      const error = new Error("User not found.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.hashedpassword);
+    if (!isMatch) {
+      const error = new Error("Current password is incorrect.");
+      error.statusCode = 401;
+      throw error;
+    }
+
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
+
+    if (!passwordRegex.test(newPassword)) {
+      const error = new Error(
+        "New password must be 8–16 characters long and include uppercase, lowercase, number, and special character."
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Prevent reuse
+    const isReused = await Promise.all(
+      user.previousPasswords.map(async (oldHash) => {
+        return await bcrypt.compare(newPassword, oldHash);
+      })
+    );
+
+    if (isReused.includes(true)) {
+      const error = new Error("You cannot reuse a previously used password.");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const newHashedPassword = await bcrypt.hash(newPassword, 12);
+    user.previousPasswords.push(newHashedPassword);
+    user.hashedpassword = newHashedPassword;
+    user.passwordCreatedAt = new Date();
+
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully." });
+  } catch (error) {
+    if (!error.statusCode) error.statusCode = 500;
+    next(error);
+  }
+};
+
+// STEP 1: Validate email & password
+exports.adminLoginStepOne = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
-    if (!email || !password) {
-      const error = new Error("Incomplete input.");
-      error.statusCode = 422;
-      throw error;
-    }
+    const admin = await AdminAccount.findOne({ email });
+    if (!admin) throw new Error("Invalid email or password");
 
-    const existingAdmin = await AdminAccount.findOne({ email });
-    if (existingAdmin) {
-      const error = new Error("Admin email already exists.");
-      error.statusCode = 409;
-      throw error;
-    }
+    const match = await bcrypt.compare(password, admin.hashedpassword);
+    if (!match) throw new Error("Invalid email or password");
 
-    const hashedPass = await bcrypt.hash(password, 12);
-    const admin = new AdminAccount({
-      email,
-      hashedpassword: hashedPass,
-      isAdmin: true,
-    });
-
-    const result = await admin.save();
-
-    const token = generateToken(true, {
-      _id: result._id,
-      email: result.email,
-      isAdmin: true,
-    });
-
+    // Password correct, ask for OTP next
     res.status(200).json({
-      message: "Admin successfully registered",
-      adminData: {
-        email: result.email,
-        id: result._id,
+      message: "Password valid. Please enter OTP.",
+      tempAdminId: admin._id,
+    });
+  } catch (error) {
+    error.statusCode = 401;
+    next(error);
+  }
+};
+
+// STEP 2: Validate OTP and generate JWT
+// exports.adminLoginStepTwo = async (req, res, next) => {
+//   const { tempAdminId, otp } = req.body;
+
+//   try {
+//     const admin = await AdminAccount.findById(tempAdminId);
+//     if (!admin || !admin.mfaSecret) {
+//       const error = new Error("Unauthorized access");
+//       error.statusCode = 401;
+//       throw error;
+//     }
+
+//     const isValid = speakeasy.totp.verify({
+//       secret: admin.mfaSecret,
+//       encoding: "base32",
+//       token: otp,
+//       window: 1,
+//     });
+
+//     if (!isValid) {
+//       const error = new Error("Invalid OTP. Try again.");
+//       error.statusCode = 401;
+//       throw error;
+//     }
+
+//     // OTP correct — now issue token
+//     const token = generateToken(true, {
+//       _id: admin._id,
+//       email: admin.email,
+//       isAdmin: true,
+//     });
+
+//     res.status(200).json({
+//       message: "MFA Login successful",
+//       token,
+//       adminData: {
+//         id: admin._id,
+//         email: admin.email,
+//         isAdmin: true,
+//       },
+//     });
+//   } catch (error) {
+//     if (!error.statusCode) error.statusCode = 500;
+//     next(error);
+//   }
+// };
+
+exports.adminLoginStepTwo = async (req, res, next) => {
+  const { tempAdminId, otp } = req.body;
+  console.log("Received tempAdminId:", tempAdminId);
+  console.log("Received OTP:", otp);
+
+  try {
+    const admin = await AdminAccount.findById(tempAdminId);
+    console.log("Admin found:", admin);
+
+    if (!admin || !admin.mfaSecret) {
+      const error = new Error("Unauthorized access");
+      error.statusCode = 401;
+      throw error;
+    }
+
+    const isValid = speakeasy.totp.verify({
+      secret: admin.mfaSecret,
+      encoding: "base32",
+      token: otp,
+      window: 1,
+    });
+
+    if (!isValid) {
+      console.log("Invalid OTP:", otp);
+      const error = new Error("Invalid OTP. Try again.");
+      error.statusCode = 401;
+      throw error;
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        _id: admin._id,
+        email: admin.email,
         isAdmin: true,
       },
+      process.env.ADMIN_JWT_TOKEN_SECRET_MESSAGE,
+      { expiresIn: "24h" }
+    );
+
+    // Structured adminData for Redux
+    const adminData = {
+      _id: admin._id,
+      email: admin.email,
+      isAdmin: admin.isAdmin || true,
+    };
+
+    res.status(200).json({
+      message: "MFA Login successful",
       token,
+      adminData, 
     });
   } catch (error) {
     if (!error.statusCode) error.statusCode = 500;

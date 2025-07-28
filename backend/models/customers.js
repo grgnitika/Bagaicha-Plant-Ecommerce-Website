@@ -7,6 +7,9 @@ const customersSchema = new Schema(
     full_name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     hashedpassword: { type: String, required: true },
+    previousPasswords: { type: [String], default: [] },
+    passwordCreatedAt: { type: Date, default: Date.now },
+
     status: {
       type: String,
       required: true,

@@ -4,11 +4,12 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
+const session = require("express-session");
 const paymentRoutes = require("./routes/payment");
 
 const app = express();
 
-// ✅ Fixed CORS Configuration
+// Fixed CORS Configuration
 app.use(cors({
   origin: "http://localhost:5173",
   credentials: true,
@@ -17,22 +18,31 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Serve static uploads (images)
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Session Middleware for tracking login attempts
+app.use(session({
+  secret: process.env.SESSION_SECRET || "bagaichaSecretSessionKey", 
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    maxAge: 10 * 60 * 1000, // 10-minute session window
+    secure: false, // Set to true if using HTTPS in production
+    httpOnly: true,
+  },
+}));
 
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/payment", paymentRoutes);
 
-// ✅ Import Routes
 const shopRoute = require("./routes/shop");
 const authRoute = require("./routes/auth");
 const AdminshopRoute = require("./routes/admin");
 
-// ✅ Use Routes
+// Use Routes
 app.use("/", shopRoute);
 app.use("/auth", authRoute);
 app.use("/admin", AdminshopRoute);
 
-// ✅ Error Handling Middleware
+// Error Handling Middleware
 app.use((error, req, res, next) => {
   const statusCode = error.statusCode || 500;
   const data = error.data;
@@ -43,7 +53,7 @@ app.use((error, req, res, next) => {
   });
 });
 
-// ✅ MongoDB Options
+// MongoDB Options
 const options = {
   minPoolSize: 1,
   maxPoolSize: 10,
@@ -51,7 +61,7 @@ const options = {
   serverSelectionTimeoutMS: 5000,
 };
 
-// ✅ Connect to MongoDB and Start Server
+// Connect to MongoDB and Start Server
 mongoose
   .connect(process.env.MONGODB_SERVER_KEY, options)
   .then(() => {
