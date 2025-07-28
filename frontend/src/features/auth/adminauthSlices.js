@@ -2,20 +2,25 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { jwtDecode } from "jwt-decode";
 import adminauthService from "./adminauthServices";
 
+// ✅ Load admin from token if available
 function adminAuthStatus() {
   const token = localStorage.getItem("admin-token");
-  if (token === null) {
+  if (token === null) return null;
+
+  try {
+    const decoded = jwtDecode(token);
+    return {
+      _id: decoded._id,
+      email: decoded.email,
+      isAdmin: decoded.isAdmin,
+    };
+  } catch (error) {
+    console.error("Invalid token:", error);
     return null;
   }
-  const decoded = jwtDecode(token);
-  return {
-    _id: decoded._id,
-    email: decoded.email,
-    isAdmin: decoded.isAdmin
-  };
 }
 
-const initalState = {
+const initialState = {
   adminData: adminAuthStatus(),
   isLoading: false,
   isError: false,
@@ -23,30 +28,35 @@ const initalState = {
   message: "",
 };
 
+// ✅ Admin login thunk
 export const adminLogin = createAsyncThunk("admin/login", async (user, thunkAPI) => {
   try {
     return await adminauthService.adminLogin(user);
   } catch (error) {
     const message =
-      (error.response && error.response.data && error.response.data.message) ||
-      error.message;
+      (error.response?.data?.message) || error.message || "Login error";
     return thunkAPI.rejectWithValue(message);
   }
 });
 
+// ✅ Admin logout thunk
 export const adminLogout = createAsyncThunk("admin/logout", async () => {
   await adminauthService.adminLogout();
 });
 
 export const adminauthSlice = createSlice({
   name: "adminAuth",
-  initialState: initalState,
+  initialState,
   reducers: {
     reset: (state) => {
       state.isError = false;
       state.isLoading = false;
       state.isSuccess = false;
       state.message = "";
+    },
+    // ✅ Add this to allow manual setting from token or form
+    setAdmin: (state, action) => {
+      state.adminData = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -75,5 +85,8 @@ export const adminauthSlice = createSlice({
   },
 });
 
-export const { reset } = adminauthSlice.actions;
+// ✅ Export actions
+export const { reset, setAdmin } = adminauthSlice.actions;
+
+// ✅ Export reducer
 export default adminauthSlice.reducer;

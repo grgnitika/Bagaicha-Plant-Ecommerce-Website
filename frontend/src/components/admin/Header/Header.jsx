@@ -19,7 +19,7 @@ import { Link } from "react-router-dom";
 
 function Header() {
   const isResponsive = useMediaQuery("only screen and (max-width: 992px)");
-  const { adminData } = useSelector((state) => state.adminAuth);
+  const { adminData } = useSelector((state) => state.adminAuth || {}); 
   return (
     <React.Fragment>
       <header className="sticky top-0 z-10 border-b-[1px] border-b-[#121212]/10">

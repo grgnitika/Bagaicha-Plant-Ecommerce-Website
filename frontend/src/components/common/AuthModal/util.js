@@ -6,10 +6,10 @@ export const loginFormSchema = z.object({
     .email({ message: "Not correct email id." }),
   password: z
     .string({
-      required_error: "Please enter categories of id.",
+      required_error: "Please enter your password.",
     })
-    .min(6, { message: "Min at least 6 character password" }),
 });
+
 
 export const registerFormSchema = z.object({
   name: z
@@ -20,7 +20,14 @@ export const registerFormSchema = z.object({
     .email({ message: "Not correct email id." }),
   password: z
     .string({
-      required_error: "Please enter categories of id.",
+      required_error: "Please enter your password.",
     })
-    .min(6, { message: "Min at least 6 character password" }),
+    .min(8, { message: "Password must be at least 8 characters" })
+    .max(16, { message: "Password must not exceed 16 characters" })
+    .regex(/[a-z]/, { message: "Password must include a lowercase letter" })
+    .regex(/[A-Z]/, { message: "Password must include an uppercase letter" })
+    .regex(/[0-9]/, { message: "Password must include a number" })
+    .regex(/[^a-zA-Z0-9]/, {
+      message: "Password must include a special character",
+    }),
 });

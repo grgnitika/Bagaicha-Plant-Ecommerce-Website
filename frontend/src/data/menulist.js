@@ -39,19 +39,7 @@ const footermenulist = [
     submenu: [
       { id: "cid1", title: "About us", url: "#" },
       { id: "cid2", title: "Our Stores", url: "#" },
-      { id: "cid3", title: "Contact Us", url: "#" },
       { id: "cid4", title: "My Account", url: "#" },
-    ],
-  },
-  {
-    id: "fl2",
-    title: "Customer Service",
-    submenu: [
-      { id: "cid5", title: "Privacy Policy", url: "#" },
-      { id: "cid6", title: "Return Policy", url: "#" },
-      { id: "cid7", title: "Shipping Return", url: "#" },
-      { id: "cid8", title: "Store Locations", url: "#" },
-      { id: "cid9", title: "FAQ", url: "#" },
     ],
   },
 ];

@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import LoadingBar from "react-top-loading-bar";
+import zxcvbn from "zxcvbn"; 
 
 import { registerFormSchema } from "@/components/common/AuthModal/util";
 
@@ -164,22 +165,41 @@ function Register() {
                       </div>
                       <div className="grid gap-2">
                         <FormField
-                          control={form.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Password</FormLabel>
-                              <FormControl>
-                                <PasswordInput
-                                  id="password"
-                                  {...field}
-                                  value={field.value || ""}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+  control={form.control}
+  name="password"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Password</FormLabel>
+      <FormControl>
+        <PasswordInput
+          id="password"
+          {...field}
+          value={field.value || ""}
+          onChange={(e) => {
+            field.onChange(e);
+            const pwd = e.target.value;
+            setPassword(pwd);
+            setPasswordStrength(zxcvbn(pwd).score);
+          }}
+        />
+      </FormControl>
+      {password && (
+        <p className="text-sm mt-1">
+          Strength:{" "}
+          <span
+            className={
+              passwordStrength >= 3 ? "text-green-600" : "text-red-500"
+            }
+          >
+            {["Very Weak", "Weak", "Fair", "Good", "Strong"][passwordStrength]}
+          </span>
+        </p>
+      )}
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
                       </div>
                     </div>
                   </CardContent>

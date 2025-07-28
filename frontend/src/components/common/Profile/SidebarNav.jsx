@@ -42,6 +42,20 @@ function SidebarNav({ className, ...props }) {
       >
         Orders
       </NavLink>
+      <NavLink
+      to="/profile/update-password"
+      className={({ isActive }) =>
+        cn(
+          buttonVariants({ variant: "primary" }),
+          isActive
+          ? "bg-bgprimary text-whiteprimary hover:bg-bgprimary hover:text-whiteprimary"
+          : "bg-muted hover:bg-muted hover:underline hover:text-[#121212]",
+          "justify-start"
+        )
+      }
+    >
+      Update Password
+      </NavLink>
     </nav>
   );
 }

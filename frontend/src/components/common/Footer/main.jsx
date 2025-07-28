@@ -32,10 +32,7 @@ function Footer() {
         )}
       </div>
       <p className="bg-bgprimary text-base text-whiteprimary font-light text-center py-5 -translate-y-0.5 sm:-translate-y-0">
-        Website designed & developed by Niraj Deshmukh <br />
-        <span className="text-whiteprimary font-light text-center my-2">
-          Technologies used React.js, Node.js, Express.js, MongoDB
-        </span>
+        Website designed & developed by Nitika Gurung © 2025 Bagaicha. All rights reserved.
       </p>
     </React.Fragment>
   );

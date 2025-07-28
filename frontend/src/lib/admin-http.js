@@ -4,7 +4,7 @@ let url = import.meta.env.VITE_BACKEND;
 
 // Dashboard
 export function getDashboard({ signal }) {
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   const dashboardData = axios
     .get(url + "/admin/dashboard", {
       signal,
@@ -29,7 +29,7 @@ export function getDashboard({ signal }) {
 
 // Categories Data
 export function getAdminCategories() {
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   const categories = axios
     .get(url + "/admin/categories", {
       headers: {
@@ -53,7 +53,7 @@ export function getAdminCategories() {
 
 // Attributes Data
 export function getAdminAttributes() {
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   const attributes = axios
     .get(url + "/admin/attributes", {
       headers: {
@@ -77,7 +77,7 @@ export function getAdminAttributes() {
 
 // Get Attribute list for select input
 export function getAdminInputAttributes({ id, signal }) {
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   const attributes = axios
     .get(url + "/admin/attributes/" + id, {
       signal,
@@ -102,7 +102,7 @@ export function getAdminInputAttributes({ id, signal }) {
 
 // Get Customer list
 export function getCustomerList() {
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   const customers = axios
     .get(url + "/admin/customer-list", {
       headers: {
@@ -126,7 +126,7 @@ export function getCustomerList() {
 
 // Get Single Customer detail
 export function getSingleCustomerDetail({ id, signal }) {
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   const singleCustomer = axios
     .get(url + "/admin/single-customer-detail/" + id, {
       signal: signal,
@@ -151,7 +151,7 @@ export function getSingleCustomerDetail({ id, signal }) {
 
 // Get Single Order Details
 export function getSingleOrderDetail(id, signal) {
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   const orderdetails = axios
     .get(url + "/admin/orders/" + id, {
       signal: signal,
@@ -176,7 +176,7 @@ export function getSingleOrderDetail(id, signal) {
 
 //Post Delete Single Products
 export function postDeleteProductAdminAction({id, signal}) {
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   const deleteProduct = axios
     .delete(url + "/admin/products/" + id, {
       signal: signal,
@@ -203,7 +203,7 @@ export function postDeleteProductAdminAction({id, signal}) {
 
 // Post Delete Single Attributes
 export function postDeleteAdminAction({ id, signal }) {
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   const deleteAttribute = axios
     .delete(url + "/admin/attributes/" + id, {
       signal: signal,
@@ -229,7 +229,7 @@ export function postDeleteAdminAction({ id, signal }) {
 
 // POST Create category
 export async function postnewCategory(data) {
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   //copy object and delete two property(thumbnail and breadcrumbanner [nothing value there]) to be sent json data.
   const enteredData = Object.assign({}, data);
   delete enteredData.thumbnail;
@@ -263,7 +263,7 @@ export async function postnewCategory(data) {
 //PUT update category
 export async function putCatgory(id, data) {
   let response;
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   if (
     typeof data.thumbnail === "object" &&
     typeof data.breadcrumbbanner === "object"
@@ -348,7 +348,7 @@ export async function putCatgory(id, data) {
 
 // POST create new attribute
 export async function postAttribute(data) {
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   const response = await fetch(
     `${import.meta.env.VITE_ADMIN_AUTH_API_URL}attributes`,
     {
@@ -371,7 +371,7 @@ export async function postAttribute(data) {
 
 //PUT update single attribute
 export async function putAttribute(id, data) {
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   const response = await fetch(
     `${import.meta.env.VITE_ADMIN_AUTH_API_URL}attributes/edit/` + id,
     {
@@ -393,7 +393,7 @@ export async function putAttribute(id, data) {
 
 // POST create new product
 export async function postProduct(data) {
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   //copy object and delete two property(media and featureimage [nothing value there instead they are files]).
   const enteredData = Object.assign({}, data);
   delete enteredData.media;
@@ -431,7 +431,7 @@ export async function postProduct(data) {
 //PUT Edit single Product detail
 export async function editProduct(id, data) {
   let response;
-  const adminToken = localStorage.getItem("admin-token");
+  const adminToken = localStorage.getItem("adminToken");
   if (typeof data.featureimage === "object") {
     const enteredData = Object.assign({}, data);
     delete enteredData.featureimage;

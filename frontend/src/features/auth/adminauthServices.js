@@ -11,7 +11,11 @@ const adminLogin = async (userData) => {
     localStorage.setItem("admin-token", response.data.token);
   }
 
-  return { data: response.data.adminuserData };
+  return {
+  data: response.data.adminData,  
+  token: response.data.token
+};
+
 };
 
 const adminLogout = () => {
