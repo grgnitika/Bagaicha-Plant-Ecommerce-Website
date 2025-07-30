@@ -404,7 +404,7 @@ exports.getAttributeListInputField = async (req, res, next) => {
     }
 
     const responseattributelist = await Attribute.find({
-      attribute_group: selectedcategory,
+      category: selectedcategory,
     }).select("name attribute_options attribute_code");
 
     const attributelist = responseattributelist.map((data) => {

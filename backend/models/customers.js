@@ -5,7 +5,15 @@ const { Product } = require("./product");
 const customersSchema = new Schema(
   {
     full_name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    emailEncrypted: { type: String, required: true },
+    emailLookup: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+
     hashedpassword: { type: String, required: true },
     previousPasswords: { type: [String], default: [] },
     passwordCreatedAt: { type: Date, default: Date.now },

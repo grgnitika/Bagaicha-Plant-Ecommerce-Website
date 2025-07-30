@@ -5,7 +5,9 @@ const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const speakeasy = require("speakeasy");
 const qrcode = require("qrcode");
-
+const { encrypt } = require("../utils/encryption");
+const { decrypt } = require("../utils/encryption");
+const { logToFile } = require("../utils/logger");
 
 // Customer Registration
 exports.registerAccount = async (req, res, next) => {
@@ -18,12 +20,17 @@ exports.registerAccount = async (req, res, next) => {
       throw error;
     }
 
-    const exitsaccount = await Customers.findOne({ email });
-    if (exitsaccount) {
-      const error = new Error("Email Account already exists. please sign it.");
-      error.statusCode = 409;
-      throw error;
-    }
+   const encryptedEmail = encrypt(email);
+const emailLookup = email.toLowerCase().trim();
+
+const existsAccount = await Customers.findOne({ emailLookup });
+if (existsAccount) {
+  const error = new Error("Email Account already exists. Please sign in.");
+  error.statusCode = 409;
+  throw error;
+}
+
+
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
     
@@ -38,7 +45,8 @@ exports.registerAccount = async (req, res, next) => {
     const hashedPass = await bcrypt.hash(password, 12);
     const user = new Customers({
       full_name: name,
-      email,
+      emailEncrypted: encryptedEmail,
+      emailLookup: email.toLowerCase().trim(),
       hashedpassword: hashedPass,
       previousPasswords: [hashedPass],
       passwordCreatedAt: new Date(),
@@ -53,6 +61,8 @@ exports.registerAccount = async (req, res, next) => {
         name: result.full_name,
         email,
       });
+
+      logToFile(`New user registered: ${email}`);
 
       res.status(200).json({
         message: "Successfully Registered." + token,
@@ -92,13 +102,23 @@ exports.loginAccount = async (req, res, next) => {
       });
     }
 
-    const checkuser = await Customers.findOne({ email });
+    const emailLookup = email.toLowerCase().trim();
+    console.log("Login email lookup:", emailLookup);
+    
+    const checkuser = await Customers.findOne({ emailLookup });
+    console.log("Matched user from DB:", checkuser);
+
     if (!checkuser) {
       req.session.failedLoginAttempts[email] = failCount + 1;
       throw new Error("This account doesn't exist!");
     }
 
     const checkpass = await bcrypt.compare(password, checkuser.hashedpassword);
+
+    console.log("Entered password:", password);
+console.log("Stored hashed password:", checkuser.hashedpassword);
+console.log("Password match result:", checkpass);
+
     if (!checkpass) {
       req.session.failedLoginAttempts[email] = failCount + 1;
       throw new Error("Incorrect email or password.");
@@ -118,21 +138,26 @@ exports.loginAccount = async (req, res, next) => {
 
     req.session.failedLoginAttempts[email] = 0;
 
+    const decryptedEmail = decrypt(checkuser.emailEncrypted);
+
     const token = generateToken(false, {
       _id: checkuser._id,
       name: checkuser.full_name,
-      email: checkuser.email,
+      email: decryptedEmail, 
     });
 
+    logToFile(`User login successful: ${checkuser.emailLookup}`);
+
     res.status(200).json({
-      message: "Successfully signed in",
-      userdata: {
-        name: checkuser.full_name,
-        email,
-        id: checkuser._id,
-      },
-      token,
-    });
+  message: "Successfully signed in",
+  userdata: {
+    name: checkuser.full_name,
+    email: decryptedEmail,
+    id: checkuser._id,
+  },
+  token,
+});
+
   } catch (error) {
     error.statusCode = error.statusCode || 401;
     next(error);
@@ -207,6 +232,22 @@ exports.getUserDetail = async (req, res, next) => {
     const userdetail = await Customers.findById(userid).select(
       "full_name email createdAt status"
     );
+
+    if (!userdetail) {
+      const error = new Error("Couldn't find resource.");
+      error.statusCode = 400;
+      throw error;
+    }
+    
+    // Decrypt email before sending it
+    const decryptedEmail = decrypt(userdetail.email);
+    
+    res.status(200).json({
+      full_name: userdetail.full_name,
+      email: decryptedEmail,
+      createdAt: userdetail.createdAt,
+      status: userdetail.status,
+    });
 
     if (!userdetail || userdetail.length === 0) {
       const error = new Error("Couldn't find resource.");
@@ -337,7 +378,7 @@ exports.updatePassword = async (req, res, next) => {
   }
 };
 
-// STEP 1: Validate email & password
+// Validate email & password
 exports.adminLoginStepOne = async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -358,53 +399,6 @@ exports.adminLoginStepOne = async (req, res, next) => {
     next(error);
   }
 };
-
-// STEP 2: Validate OTP and generate JWT
-// exports.adminLoginStepTwo = async (req, res, next) => {
-//   const { tempAdminId, otp } = req.body;
-
-//   try {
-//     const admin = await AdminAccount.findById(tempAdminId);
-//     if (!admin || !admin.mfaSecret) {
-//       const error = new Error("Unauthorized access");
-//       error.statusCode = 401;
-//       throw error;
-//     }
-
-//     const isValid = speakeasy.totp.verify({
-//       secret: admin.mfaSecret,
-//       encoding: "base32",
-//       token: otp,
-//       window: 1,
-//     });
-
-//     if (!isValid) {
-//       const error = new Error("Invalid OTP. Try again.");
-//       error.statusCode = 401;
-//       throw error;
-//     }
-
-//     // OTP correct — now issue token
-//     const token = generateToken(true, {
-//       _id: admin._id,
-//       email: admin.email,
-//       isAdmin: true,
-//     });
-
-//     res.status(200).json({
-//       message: "MFA Login successful",
-//       token,
-//       adminData: {
-//         id: admin._id,
-//         email: admin.email,
-//         isAdmin: true,
-//       },
-//     });
-//   } catch (error) {
-//     if (!error.statusCode) error.statusCode = 500;
-//     next(error);
-//   }
-// };
 
 exports.adminLoginStepTwo = async (req, res, next) => {
   const { tempAdminId, otp } = req.body;
@@ -434,6 +428,8 @@ exports.adminLoginStepTwo = async (req, res, next) => {
       error.statusCode = 401;
       throw error;
     }
+
+    logToFile(`Admin MFA login success: ${admin.email}`);
 
     // Generate JWT token
     const token = jwt.sign(

@@ -4,7 +4,7 @@ const { Product, ProductDetails } = require("../models/product");
 const Attribute = require("../models/attributes");
 const Shop = require("../models/shop");
 const Order = require("../models/orders");
-
+const { decrypt } = require("../utils/encryption");
 
 const { sortBySelectionAggerationStages } = require("../utils/helper.util");
 
@@ -31,7 +31,6 @@ exports.searchBasedFromUser = async (req, res, next) => {
 
 exports.home = async (req, res, next) => {
   try {
-    // Temporarily disabling Firebase banner fetch
     const home_banner_url = null;
 
     // Fetch latest 5 products sorted by newest first
@@ -40,24 +39,20 @@ exports.home = async (req, res, next) => {
       .select("productname price ratingstar featuredimageUrl")
       .limit(5);
 
-    // Check if product list is empty
     if (!latestProduct || latestProduct.length === 0) {
       const error = new Error("No products found.");
       error.statusCode = 503;
       throw error;
     }
 
-    // Send response with products and banner image
     res.status(200).json({ latestProduct, home_banner_url });
   } catch (error) {
-    // Default to internal server error if no status code is set
     if (!error.statusCode) {
       error.statusCode = 500;
     }
     next(error);
   }
 };
-
 
 
 exports.getCategoriesList = async (req, res, next) => {
@@ -93,7 +88,6 @@ exports.getCategoryInfoWithAttributes = async (req, res, next) => {
       throw error;
     }
 
-    // 🔧 FIXED: use findOne instead of find (which returns array)
     const category = await Category.findOne({ categoriesid: categoryParams });
 
     if (!category) {
@@ -102,7 +96,6 @@ exports.getCategoryInfoWithAttributes = async (req, res, next) => {
       throw error;
     }
 
-    // Get Max price of product from collections.
     const productlistprice = await Product.aggregate([
       {
         $lookup: {
@@ -443,8 +436,6 @@ exports.postCart = async (req, res, next) => {
   const cart = req.body.cartdata;
   const customerid = req.params.userid;
 
-  // console.log("Post cart method called", cart);
-
   if (!customerid && !cart) {
     const error = new Error("Missing cart data");
     error.statusCode = 400;
@@ -526,7 +517,6 @@ exports.getUserOrderslist = async (req, res, next) => {
 };
 
 //GET Method - User's Single Order Details
-
 exports.getUserSingleOrderDetail = async (req, res, next) => {
   const id = req.params.id;
 
@@ -566,13 +556,32 @@ exports.getUserSingleOrderDetail = async (req, res, next) => {
     };
 
     const payment_detail = orderdetails[0].paymentid;
-
-    const customerdetail = {
-      email: orderdetails[0].email,
-      phoneno: orderdetails[0].contact,
-      shipping_address: orderdetails[0].shipping_address,
-      billing_address: orderdetails[0].billing_address,
+    
+    const decryptedShipping = {
+      full_name: decrypt(orderdetails[0].shipping_address.full_name),
+      address: decrypt(orderdetails[0].shipping_address.address),
+      city: decrypt(orderdetails[0].shipping_address.city),
+      state: decrypt(orderdetails[0].shipping_address.state),
+      country: decrypt(orderdetails[0].shipping_address.country),
+      zip: decrypt(orderdetails[0].shipping_address.zip),
     };
+    
+    const decryptedBilling = {
+      full_name: decrypt(orderdetails[0].billing_address.full_name),
+      address: decrypt(orderdetails[0].billing_address.address),
+      city: decrypt(orderdetails[0].billing_address.city),
+      state: decrypt(orderdetails[0].billing_address.state),
+      country: decrypt(orderdetails[0].billing_address.country),
+      zip: decrypt(orderdetails[0].billing_address.zip),
+    };
+
+const customerdetail = {
+  email: decrypt(orderdetails[0].email),
+  phoneno: decrypt(orderdetails[0].contact),
+  shipping_address: decryptedShipping,
+  billing_address: decryptedBilling,
+};
+
 
     res.status(200).json({
       customerdetail,

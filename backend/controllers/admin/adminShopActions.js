@@ -102,7 +102,7 @@ exports.updateOrdercodstatus = async (req, res, next) => {
   }
 };
 
-// DELETE Method - Delete Single Product
+// Delete Single Product
 exports.deleteSingleProduct = async (req, res, next) => {
   const { id } = req.params;
 
@@ -445,6 +445,7 @@ exports.postAttributes = async (req, res, next) => {
       attribute_code: attributescode,
       attribute_options: attribute_options,
       attribute_group: parentcategories,
+      category: parentcategories,
       display_customer: displaycustomer,
     });
 

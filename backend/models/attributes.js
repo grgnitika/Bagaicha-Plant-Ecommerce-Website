@@ -5,10 +5,10 @@ const attributeSchema = new Schema({
   name: { type: String, required: true },
   attribute_code: { type: String, required: true, unique: true },
   attribute_options: [{ value: { type: String, required: true, unique: true } }],
-  attribute_group: {
+  category: {
     type: Schema.Types.ObjectId,
     required: true,
-    ref: "categories",
+    ref: "categories", // ✅ assuming your category model is named "categories"
   },
   display_customer: { type: String, required: true, enum: ["yes", "no"] },
 });

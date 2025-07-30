@@ -4,6 +4,8 @@ const Order = require("../models/orders");
 const Customer = require("../models/customers");
 const Payment = require("../models/payment");
 const { ProductDetails } = require("../models/product");
+const { encrypt } = require("../utils/encryption");
+const { logToFile } = require("../utils/logger");
 
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
@@ -73,30 +75,31 @@ exports.saveOrderAfterStripe = async (req, res) => {
     }
 
     const commonOrderFields = {
-      email: email,
-      contact: formdetails.contact.phoneno,
-      paymentid: result_payment._id,
-      items: cartItems,
-      amount: session.amount_total / 100,
-      shippingcost: 0,
-      tax: 0,
-      shipping_address: {
-        full_name: formdetails.shippingaddress.fullname,
-        address: formdetails.shippingaddress.address,
-        city: formdetails.shippingaddress.city,
-        state: formdetails.shippingaddress.addressstate,
-        country: formdetails.shippingaddress.country,
-        zip: formdetails.shippingaddress.pincode,
-      },
-      billing_address: {
-        full_name: formdetails.billingaddress.fullname,
-        address: formdetails.billingaddress.address,
-        city: formdetails.billingaddress.city,
-        state: formdetails.billingaddress.addressstate,
-        country: formdetails.billingaddress.country,
-        zip: formdetails.billingaddress.pincode,
-      },
-    };
+  email: encrypt(email),
+  contact: encrypt(formdetails.contact.phoneno),
+  paymentid: result_payment._id,
+  items: cartItems,
+  amount: session.amount_total / 100,
+  shippingcost: 0,
+  tax: 0,
+  shipping_address: {
+    full_name: encrypt(formdetails.shippingaddress.fullname),
+    address: encrypt(formdetails.shippingaddress.address),
+    city: encrypt(formdetails.shippingaddress.city),
+    state: encrypt(formdetails.shippingaddress.addressstate),
+    country: encrypt(formdetails.shippingaddress.country),
+    zip: encrypt(formdetails.shippingaddress.pincode),
+  },
+  billing_address: {
+    full_name: encrypt(formdetails.billingaddress.fullname),
+    address: encrypt(formdetails.billingaddress.address),
+    city: encrypt(formdetails.billingaddress.city),
+    state: encrypt(formdetails.billingaddress.addressstate),
+    country: encrypt(formdetails.billingaddress.country),
+    zip: encrypt(formdetails.billingaddress.pincode),
+  },
+};
+
 
     if (existsemail.length > 0) {
       order = new Order({
@@ -104,7 +107,6 @@ exports.saveOrderAfterStripe = async (req, res) => {
         customerid: existsemail[0]._id,
       });
 
-      // Update orders array in customer
       await Customer.findOneAndUpdate(
         { _id: existsemail[0]._id },
         { $push: { orders: order._id } }
@@ -115,7 +117,8 @@ exports.saveOrderAfterStripe = async (req, res) => {
 
     const result_order = await order.save();
 
-    // Update Product Quantity
+    logToFile(`Stripe order placed successfully. OrderID: ${result_order._id}, Email: ${email}`);
+
     for (const item of cartItems) {
       const existProduct = await ProductDetails.findOne({
         product_id: item.productid,
@@ -187,30 +190,31 @@ exports.postCodCheckout = async (req, res, next) => {
     referenceid = result_payment.cod_id;
 
     const commonOrderFields = {
-      email: email,
-      contact: formdetails.contact.phoneno,
-      paymentid: result_payment._id,
-      amount: Number(amount),
-      items: cartItems,
-      shippingcost: 0,
-      tax: 0,
-      shipping_address: {
-        full_name: formdetails.shippingaddress.fullname,
-        address: formdetails.shippingaddress.address,
-        city: formdetails.shippingaddress.city,
-        state: formdetails.shippingaddress.addressstate,
-        country: formdetails.shippingaddress.country,
-        zip: formdetails.shippingaddress.pincode,
-      },
-      billing_address: {
-        full_name: formdetails.billingaddress.fullname,
-        address: formdetails.billingaddress.address,
-        city: formdetails.billingaddress.city,
-        state: formdetails.billingaddress.addressstate,
-        country: formdetails.billingaddress.country,
-        zip: formdetails.billingaddress.pincode,
-      },
-    };
+  email: encrypt(email),
+  contact: encrypt(formdetails.contact.phoneno),
+  paymentid: result_payment._id,
+  items: cartItems,
+ amount: amount,
+  shippingcost: 0,
+  tax: 0,
+  shipping_address: {
+    full_name: encrypt(formdetails.shippingaddress.fullname),
+    address: encrypt(formdetails.shippingaddress.address),
+    city: encrypt(formdetails.shippingaddress.city),
+    state: encrypt(formdetails.shippingaddress.addressstate),
+    country: encrypt(formdetails.shippingaddress.country),
+    zip: encrypt(formdetails.shippingaddress.pincode),
+  },
+  billing_address: {
+    full_name: encrypt(formdetails.billingaddress.fullname),
+    address: encrypt(formdetails.billingaddress.address),
+    city: encrypt(formdetails.billingaddress.city),
+    state: encrypt(formdetails.billingaddress.addressstate),
+    country: encrypt(formdetails.billingaddress.country),
+    zip: encrypt(formdetails.billingaddress.pincode),
+  },
+};
+
 
     if (existsemail.length > 0) {
       order = new Order({
@@ -232,6 +236,9 @@ exports.postCodCheckout = async (req, res, next) => {
       order = new Order(commonOrderFields);
       const result_order = await order.save();
       orderid = result_order._id;
+
+      logToFile(`COD order placed successfully. OrderID: ${orderid}, Email: ${email}`);
+
     }
 
     // Update product quantity after order

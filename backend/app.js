@@ -1,22 +1,32 @@
 require("dotenv").config(); // Load .env variables
 
+const https = require("https");
+const fs = require("fs");
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
 const session = require("express-session");
 const paymentRoutes = require("./routes/payment");
+const mongoSanitize = require("express-mongo-sanitize");
+const xss = require("xss-clean");
+const csurf = require("csurf");
 
 const app = express();
 
-// Fixed CORS Configuration
+// CORS Configuration
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: "https://localhost:5173",
   credentials: true,
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Sanitizaton middlewares
+app.use(mongoSanitize());
+app.use(xss());
 
 // Session Middleware for tracking login attempts
 app.use(session({
@@ -29,6 +39,17 @@ app.use(session({
     httpOnly: true,
   },
 }));
+
+// CSRF Protection Middleware
+const csrfProtection = csurf({
+  cookie: false, 
+});
+app.use(csrfProtection);
+
+app.get("/csrf-token", (req, res) => {
+  res.status(200).json({ csrfToken: req.csrfToken() });
+});
+
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/payment", paymentRoutes);
@@ -66,8 +87,14 @@ mongoose
   .connect(process.env.MONGODB_SERVER_KEY, options)
   .then(() => {
     console.log("mongodb connected");
-    app.listen(5000, () => {
-      console.log("Backend Server started on port 5000");
-    });
+    const sslOptions = {
+  key: fs.readFileSync("./certs/key.pem"),
+  cert: fs.readFileSync("./certs/cert.pem"),
+};
+
+https.createServer(sslOptions, app).listen(5000, () => {
+  console.log("🔐 HTTPS Backend running on port 5000");
+});
+
   })
   .catch((err) => console.log(err));

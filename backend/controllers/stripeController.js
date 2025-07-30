@@ -1,13 +1,14 @@
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const { logToFile } = require("../utils/logger");
 
 const createStripeSession = async (req, res) => {
   const { cart_items, customer_info } = req.body;
 
   try {
     // Add full logging for debug
-    console.log("🧾 cart_items:", cart_items);
-    console.log("👤 customer_info:", customer_info);
+    console.log("cart_items:", cart_items);
+    console.log("customer_info:", customer_info);
 
     if (!cart_items || !Array.isArray(cart_items) || cart_items.length === 0) {
       throw new Error("Missing or invalid cart_items");
@@ -39,9 +40,11 @@ const createStripeSession = async (req, res) => {
       cancel_url: `${process.env.FRONTEND_URL}/checkout`,
     });
 
+    logToFile(`Stripe session created: ${session.id}, Email: ${customer_info.email}`);
+
     res.status(200).json({ url: session.url });
   } catch (error) {
-    console.error("❌ Stripe session error:", error); // full object for debugging
+    console.error("❌ Stripe session error:", error); 
     res.status(500).json({ error: "Stripe session failed" });
   }
 };
@@ -51,6 +54,9 @@ const verifyStripeSession = async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.retrieve(session_id);
     if (session && session.payment_status === "paid") {
+
+      logToFile(`Stripe payment verified successfully: ${session.id}`);
+
       return res.status(200).json({ success: true, session });
     } else {
       return res.status(400).json({ success: false, message: "Payment not completed" });
