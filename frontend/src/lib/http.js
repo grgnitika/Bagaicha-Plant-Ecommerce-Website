@@ -1,6 +1,22 @@
 import axios from "axios";
 import { QueryClient } from "@tanstack/react-query";
 
+let url = import.meta.env.VITE_BACKEND;
+
+let csrfToken = null;
+
+// Fetch CSRF token and store it
+export async function fetchCsrfToken() {
+  const res = await axios.get(`${url}/csrf-token`, { withCredentials: true });
+  csrfToken = res.data.csrfToken;
+  return csrfToken;
+}
+
+// Return header with CSRF token (used only in POST/PUT/DELETE)
+export function getCsrfHeader() {
+  return csrfToken ? { "X-CSRF-Token": csrfToken } : {};
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -8,8 +24,6 @@ export const queryClient = new QueryClient({
     },
   },
 });
-
-let url = import.meta.env.VITE_BACKEND;
 
 // Search
 export function SearchProduct({ signal, search }) {
@@ -132,40 +146,9 @@ export function getCollectionInfowithAttributes({ categoryid, signal }) {
 }
 
 // GET All details of collection as well as filter
-// export function getCollection({
-//   collectionname,
-//   pageParam,
-// }) {
-//   /* */
-//   let urlString = window.location.href;
-//   let paramString = urlString.split("?")[1];
-//   let queryString = new URLSearchParams(paramString);
-//   /* */
-//   let full_url = url + `/collections-product/${collectionname}?cursor=${pageParam}`;
-
-//   if (queryString) {
-//     full_url =
-//       url + `/collections-product/${collectionname}` + "?" + queryString + "&cursor=" + pageParam;
-//   }
-
-//   const collections = axios
-//     .get(full_url)
-//     .then((response) => {
-//       if (response.status === 200) {
-//         return response.data;
-//       }
-//     })
-//     .catch((error) => {
-//       if (error.response) {
-//         throw error.response;
-//       }
-//       throw error;
-//     });
-//   return collections;
-// }
 export function getCollection({ collectionname, pageParam }) {
-  const urlParams = new URLSearchParams(window.location.search); // safer
-  urlParams.set("cursor", pageParam); // always set/update cursor
+  const urlParams = new URLSearchParams(window.location.search);
+  urlParams.set("cursor", pageParam);
 
   const full_url = `${url}/collections-product/${collectionname}?${urlParams.toString()}`;
 
@@ -180,15 +163,22 @@ export function getCollection({ collectionname, pageParam }) {
     });
 }
 
-
-// Initialize Razorpay order
+// ✅ POST Razorpay Checkout with CSRF
 export function initializeRazorpay(amount, formdetails, cart_items) {
   const order = axios
-    .post(url + "/checkout/razorpay", {
-      amount,
-      formdetails,
-      cart_items,
-    })
+    .post(
+      url + "/checkout/razorpay",
+      {
+        amount,
+        formdetails,
+        cart_items,
+      },
+      {
+        headers: {
+          ...getCsrfHeader(),
+        },
+      }
+    )
     .then((response) => {
       if (response.status === 200) {
         return response.data;
@@ -203,14 +193,22 @@ export function initializeRazorpay(amount, formdetails, cart_items) {
   return order;
 }
 
-// POST Order for cod checkout
+// ✅ POST COD Checkout with CSRF
 export function codCheckout(amount, formdetails, cart_items) {
   const neworder = axios
-    .post(url + "/checkout/cod", {
-      amount,
-      formdetails,
-      cart_items,
-    })
+    .post(
+      url + "/checkout/cod",
+      {
+        amount,
+        formdetails,
+        cart_items,
+      },
+      {
+        headers: {
+          ...getCsrfHeader(),
+        },
+      }
+    )
     .then((response) => {
       if (response.status === 200) {
         return response.data;

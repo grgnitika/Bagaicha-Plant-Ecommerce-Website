@@ -63,9 +63,11 @@ function PrivateRoutes() {
   console.log("PrivateRoutes - user:", user);
 
   // ✅ 4. Routing logic
-  if (user !== null) {
-    return <Navigate to="/" />;
-  }
+  // If user exists and is NOT an admin, redirect them away from admin routes
+if (user && !isAdmin) {
+  return <Navigate to="/" />;
+}
+
 
   if (isAdmin) {
     return <AdminRootLayout />;

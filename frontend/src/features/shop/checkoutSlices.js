@@ -119,7 +119,7 @@ function userAuthStatus() {
 }
 
 const initialState = {
-  contactFormDetails: { email: "", phoneno: "" },
+  contactFormDetails: { name: "", email: "", phone: "" },
   shippingAddressFormDetails: {
     fullname: "",
     address: "",
@@ -139,7 +139,7 @@ const checkoutSlice = createSlice({
   initialState: initialState,
   reducers: {
     reset: (state) => {
-      state.contactFormDetails = { email: "", phoneno: "" };
+      state.contactFormDetails = { name: "", email: "", phone: "" };
       state.shippingAddressFormDetails = {
         fullname: "",
         address: "",
@@ -155,31 +155,30 @@ const checkoutSlice = createSlice({
     },
 
     contactFormProcess: (state, action) => {
-      if (!action.payload.email) {
-        return;
-      }
-      const user = userAuthStatus();
-      if (user !== null) {
-        state.isContactDetailsExits = true;
-        state.contactFormDetails = {
-          ...state.contactFormDetails,
-          email: user?.email,
-        };
-        state.checkoutformStage = 2;
-      } else {
-        state.contactFormDetails = {
-          ...state.contactFormDetails,
-          email: action.payload.email,
-        };
-        state.checkoutformStage = 2;
-      }
-    },
+  const user = userAuthStatus();
+
+  const name = action.payload.name;
+  const email = user?.email || action.payload.email;
+  const phone = action.payload.phone;
+
+  if (!email) return;
+
+  state.contactFormDetails = {
+    name,
+    email,
+    phone,
+  };
+
+  state.checkoutformStage = 2;
+},
+
 
     addressFormProcess: (state, action) => {
       state.contactFormDetails = {
-        ...state.contactFormDetails,
-        phoneno: action.payload.data.phoneno,
-      };
+  ...state.contactFormDetails,
+  phone: action.payload.data.phoneno,
+};
+
       state.shippingAddressFormDetails = {
         fullname: action.payload.data.shippingfullname,
         address: action.payload.data.shippingaddress,

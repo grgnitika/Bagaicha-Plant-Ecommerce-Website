@@ -33,7 +33,7 @@ function CategoriesList() {
   <Link to={`/category/${categories.categoriesid}`}>
     <div>
       <img
-        src={`http://localhost:5000/uploads/${categories.thumbnail_imageurl}`}
+        src={`https://localhost:5000/uploads/${categories.thumbnail_imageurl}`}
         alt={categories.title}
         loading="lazy"
         height={320}

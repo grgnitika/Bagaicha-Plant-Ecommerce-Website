@@ -8,11 +8,12 @@ const phoneRegex = new RegExp(
 
 const pincodeRegex = new RegExp(/^[1-9][0-9]{5}$/)
 
-export const contactCheckoutFormSchema = z.object(
-  {
-    email: z.string().email({message: "Invalid email address"}),
-  }
-);
+export const contactCheckoutFormSchema = z.object({
+  name: z.string().min(2, { message: "Full name is required" }),
+  email: z.string().email({ message: "Invalid email address" }),
+  phone: z.string().min(10, { message: "Phone number is required" }),
+});
+
 
 export const addressCheckoutFormSchema = z.object({
   phoneno: z.string({

@@ -8,7 +8,7 @@ export const columns = [
   header: ({ column }) => <p className="p-1"></p>,
   cell: ({ row }) => {
     const filename = row.original.thumbnail_imageurl;
-    const imageUrl = `http://localhost:5000/uploads/${filename}`; 
+    const imageUrl = `https://localhost:5000/uploads/${filename}`; 
 
     return (
       <div className="w-32 sm:w-auto flex justify-center space-x-2">

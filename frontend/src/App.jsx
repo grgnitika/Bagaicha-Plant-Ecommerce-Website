@@ -7,6 +7,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
+import { fetchCsrfToken } from "./lib/http";
 
 /* redux method */
 import { updatePostCart, userCart } from "./features/shop/cartSlices";
@@ -200,14 +201,16 @@ let isInitial = true;
 
 function App() {
   const dispatch = useDispatch();
-
   const isSignedIn = useSelector((state) => state.auth.isSuccess);
   const account = useSelector((state) => state.auth.user);
-
   const cart = useSelector((state) => state.cart.items);
   const changedCart = useSelector((state) => state.cart.isChanged);
-
   const currentPath = window.location.pathname;
+
+  // Fetch CSRF token 
+  useEffect(() => {
+    fetchCsrfToken(); 
+  }, []);
 
   useEffect(() => {
     if (isInitial) {

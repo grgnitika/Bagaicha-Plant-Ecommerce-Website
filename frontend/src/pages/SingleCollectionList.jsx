@@ -139,7 +139,7 @@ function SingleCollectionList() {
         <div className="relative flex flex-col justify-center items-center mb-5 overflow-hidden">
           <React.Fragment key={collectionwithattributes?.categories._id}>
             <img
-              src={`http://localhost:5000/uploads/${collectionwithattributes?.categories.category_bannerurl}`}
+              src={`https://localhost:5000/uploads/${collectionwithattributes?.categories.category_bannerurl}`}
   alt={collectionwithattributes?.categories.categoriesid}
   loading="lazy"
   className="object-cover h-[230px] md:h-[380px] w-full"

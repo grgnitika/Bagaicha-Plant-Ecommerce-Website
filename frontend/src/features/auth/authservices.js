@@ -1,13 +1,16 @@
 import axios from "axios";
 import { reset } from "./authSlices";
+import { getCsrfHeader } from "@/lib/http";
 
-// API base URL from your .env file
 const API_URL = import.meta.env.VITE_AUTH_API_URL;
 
 // Register a new user
 const register = async (userData) => {
   const response = await axios.post(API_URL + "register", userData, {
-    withCredentials: true, // 👈 Ensures proper CORS and cookie handling
+    withCredentials: true,
+    headers: {
+      ...getCsrfHeader(), 
+    },
   });
 
   if (response.data.token) {
@@ -20,7 +23,10 @@ const register = async (userData) => {
 // Login an existing user
 const login = async (userData) => {
   const response = await axios.post(API_URL + "login", userData, {
-    withCredentials: true, // 👈 Important for session handling and CORS
+    withCredentials: true,
+    headers: {
+      ...getCsrfHeader(), 
+    }, 
   });
 
   if (response.data.token) {
