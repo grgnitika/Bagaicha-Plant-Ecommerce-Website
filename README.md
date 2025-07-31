@@ -3,6 +3,8 @@ Bagaicha – Secure Plant E-Commerce Website 🌿
 Bagaicha is a full-stack plant e-commerce web application where users can explore, purchase, and manage a wide variety of plants and gardening products online. It supports both customer-facing features and a secure admin dashboard for managing products, orders, and users.
 
 
+
+
 🚀 **Technologies Used**
 
 Frontend: React.js, Tailwind CSS, FilePond
@@ -18,6 +20,8 @@ xss-clean, express-mongo-sanitize (sanitization)
 csurf (CSRF protection)
 
 Other Tools: Stripe API for secure transactions, Multer for image uploads
+
+
 
 
 🔐 **Key Security Features**
