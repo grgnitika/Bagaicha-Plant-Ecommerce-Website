@@ -1,7 +1,9 @@
 Bagaicha – Secure Plant E-Commerce Website 🌿 
+
 Bagaicha is a full-stack plant e-commerce web application where users can explore, purchase, and manage a wide variety of plants and gardening products online. It supports both customer-facing features and a secure admin dashboard for managing products, orders, and users.
 
-🚀 Technologies Used
+
+🚀 **Technologies Used**
 
 Frontend: React.js, Tailwind CSS, FilePond
 
@@ -17,22 +19,23 @@ csurf (CSRF protection)
 
 Other Tools: Stripe API for secure transactions, Multer for image uploads
 
-🔐 Key Security Features
 
-AES Encryption: Sensitive user data (email, phone, address) encrypted before DB storage
+🔐 **Key Security Features**
 
-Strong Password Policy: Regex-enforced complexity, expiry, password history, and strength meter
+**AES Encryption**: Sensitive user data (email, phone, address) encrypted before DB storage
 
-Multi-Factor Authentication (MFA): Admins require time-based OTP for login
+**Strong Password Policy**: Regex-enforced complexity, expiry, password history, and strength meter
 
-Role-Based Access Control (RBAC): Strict separation of customer and admin routes
+**Multi-Factor Authentication (MFA)**: Admins require time-based OTP for login
 
-Secure File Uploads: MIME type checks on both frontend and backend
+**Role-Based Access Control (RBAC)**: Strict separation of customer and admin routes
 
-Session + JWT Authentication: Flexible and secure user session handling
+**Secure File Uploads**: MIME type checks on both frontend and backend
 
-CSRF Protection: Csurf middleware and token-based request validation
+**Session + JWT Authentication**: Flexible and secure user session handling
 
-HTTPS with SAN Certificate: Secure communication in both frontend and backend
+**CSRF Protectio**n: Csurf middleware and token-based request validation
 
-Audit Logging: All critical user/admin actions logged for traceability
+**HTTPS with SAN Certificate**: Secure communication in both frontend and backend
+
+**Audit Logging**: All critical user/admin actions logged for traceability
