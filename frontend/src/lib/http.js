@@ -163,37 +163,7 @@ export function getCollection({ collectionname, pageParam }) {
     });
 }
 
-// ✅ POST Razorpay Checkout with CSRF
-export function initializeRazorpay(amount, formdetails, cart_items) {
-  const order = axios
-    .post(
-      url + "/checkout/razorpay",
-      {
-        amount,
-        formdetails,
-        cart_items,
-      },
-      {
-        headers: {
-          ...getCsrfHeader(),
-        },
-      }
-    )
-    .then((response) => {
-      if (response.status === 200) {
-        return response.data;
-      }
-    })
-    .catch((error) => {
-      if (error.response) {
-        throw error.response;
-      }
-      throw error;
-    });
-  return order;
-}
-
-// ✅ POST COD Checkout with CSRF
+// POST COD Checkout with CSRF
 export function codCheckout(amount, formdetails, cart_items) {
   const neworder = axios
     .post(
