@@ -103,10 +103,10 @@ exports.loginAccount = async (req, res, next) => {
     }
 
     const emailLookup = email.toLowerCase().trim();
-    console.log("Login email lookup:", emailLookup);
+    //console.log("Login email lookup:", emailLookup);
     
     const checkuser = await Customers.findOne({ emailLookup });
-    console.log("Matched user from DB:", checkuser);
+    //console.log("Matched user from DB:", checkuser);
 
     if (!checkuser) {
       req.session.failedLoginAttempts[email] = failCount + 1;
@@ -115,9 +115,9 @@ exports.loginAccount = async (req, res, next) => {
 
     const checkpass = await bcrypt.compare(password, checkuser.hashedpassword);
 
-    console.log("Entered password:", password);
-console.log("Stored hashed password:", checkuser.hashedpassword);
-console.log("Password match result:", checkpass);
+    //console.log("Entered password:", password);
+//console.log("Stored hashed password:", checkuser.hashedpassword);
+//console.log("Password match result:", checkpass);
 
     if (!checkpass) {
       req.session.failedLoginAttempts[email] = failCount + 1;
@@ -314,7 +314,7 @@ exports.registerAdminAccount = async (req, res) => {
       qr: qrDataURL,
     });
   } catch (error) {
-    console.error("Register admin failed:", error);
+    //console.error("Register admin failed:", error);
     res.status(500).json({ message: "Server error." });
   }
 };
@@ -402,12 +402,12 @@ exports.adminLoginStepOne = async (req, res, next) => {
 
 exports.adminLoginStepTwo = async (req, res, next) => {
   const { tempAdminId, otp } = req.body;
-  console.log("Received tempAdminId:", tempAdminId);
-  console.log("Received OTP:", otp);
+  //console.log("Received tempAdminId:", tempAdminId);
+  //console.log("Received OTP:", otp);
 
   try {
     const admin = await AdminAccount.findById(tempAdminId);
-    console.log("Admin found:", admin);
+    //console.log("Admin found:", admin);
 
     if (!admin || !admin.mfaSecret) {
       const error = new Error("Unauthorized access");
@@ -423,7 +423,7 @@ exports.adminLoginStepTwo = async (req, res, next) => {
     });
 
     if (!isValid) {
-      console.log("Invalid OTP:", otp);
+      //console.log("Invalid OTP:", otp);
       const error = new Error("Invalid OTP. Try again.");
       error.statusCode = 401;
       throw error;

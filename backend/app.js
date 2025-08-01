@@ -86,7 +86,7 @@ const options = {
 mongoose
   .connect(process.env.MONGODB_SERVER_KEY, options)
   .then(() => {
-    console.log("mongodb connected");
+    //console.log("mongodb connected");
     const sslOptions = {
   key: fs.readFileSync("./certs/key.pem"),
   cert: fs.readFileSync("./certs/cert.pem"),
