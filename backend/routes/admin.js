@@ -14,7 +14,6 @@ router.post("/login-step1", authControllers.adminLoginStepOne);
 router.post("/login-step2", authControllers.adminLoginStepTwo); 
 
 router.post("/register", authControllers.registerAdminAccount);
-// router.post("/login", validate("login"), authControllers.adminLoginAccount);
 
 router.get("/dashboard", isAuth, shopReadController.getDashboard);
 router.get("/orders", isAuth, shopReadController.getOrderslist);
