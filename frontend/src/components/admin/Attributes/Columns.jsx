@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import DeleteAttributeAction from "./DeleteAttributeAction";
 
-
 // import { DataTableColumnHeader } from "./data-table-column-header";
 // import { DataTableRowActions } from "./data-table-row-actions";
 
