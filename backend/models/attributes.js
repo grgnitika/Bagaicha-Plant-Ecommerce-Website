@@ -8,7 +8,7 @@ const attributeSchema = new Schema({
   category: {
     type: Schema.Types.ObjectId,
     required: true,
-    ref: "categories", // ✅ assuming your category model is named "categories"
+    ref: "categories", 
   },
   display_customer: { type: String, required: true, enum: ["yes", "no"] },
 });
