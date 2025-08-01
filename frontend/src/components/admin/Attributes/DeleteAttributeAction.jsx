@@ -4,7 +4,6 @@ import { SpinnerGap, Trash } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { postDeleteAdminAction } from "@/lib/admin-http";
 import { useNavigate } from "react-router-dom";
-// import { toast } from "react-hot-toast";
 import { toast } from "sonner"
 import {
   AlertDialog,
