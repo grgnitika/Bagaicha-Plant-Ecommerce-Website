@@ -29,9 +29,6 @@ if (existsAccount) {
   error.statusCode = 409;
   throw error;
 }
-
-
-
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
     
     if (!passwordRegex.test(password)) {
@@ -115,9 +112,6 @@ exports.loginAccount = async (req, res, next) => {
 
     const checkpass = await bcrypt.compare(password, checkuser.hashedpassword);
 
-    //console.log("Entered password:", password);
-//console.log("Stored hashed password:", checkuser.hashedpassword);
-//console.log("Password match result:", checkpass);
 
     if (!checkpass) {
       req.session.failedLoginAttempts[email] = failCount + 1;
