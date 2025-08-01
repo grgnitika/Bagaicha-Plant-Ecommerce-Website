@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { loginFormSchema } from "../../common/AuthModal/util";
 import { jwtDecode } from "jwt-decode"; 
 
-// Redux
 import { useDispatch } from "react-redux";
 import { setAdmin } from "../../../features/auth/adminAuthSlices";
 import { useNavigate } from "react-router-dom";
