@@ -30,8 +30,7 @@ function AuthPage() {
           <div className="relative z-20 mt-auto">
             <blockquote className="space-y-2">
               <p className="text-lg">
-                &ldquo;Having indoor plants is like having little pockets of joy
-                throughout your home.&rdquo;
+                &ldquo;Welcome Back Admin!&rdquo;
               </p>
             </blockquote>
           </div>
