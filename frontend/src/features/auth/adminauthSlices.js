@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { jwtDecode } from "jwt-decode";
 import adminauthService from "./adminauthServices";
 
-// ✅ Load admin from token if available
+// Load admin from token if available
 function adminAuthStatus() {
   const token = localStorage.getItem("admin-token");
   if (token === null) return null;
@@ -28,7 +28,7 @@ const initialState = {
   message: "",
 };
 
-// ✅ Admin login thunk
+// Admin login thunk
 export const adminLogin = createAsyncThunk("admin/login", async (user, thunkAPI) => {
   try {
     return await adminauthService.adminLogin(user);
@@ -39,7 +39,7 @@ export const adminLogin = createAsyncThunk("admin/login", async (user, thunkAPI)
   }
 });
 
-// ✅ Admin logout thunk
+// Admin logout thunk
 export const adminLogout = createAsyncThunk("admin/logout", async () => {
   await adminauthService.adminLogout();
 });
@@ -54,7 +54,7 @@ export const adminauthSlice = createSlice({
       state.isSuccess = false;
       state.message = "";
     },
-    // ✅ Add this to allow manual setting from token or form
+   
     setAdmin: (state, action) => {
       state.adminData = action.payload;
     },
@@ -85,8 +85,6 @@ export const adminauthSlice = createSlice({
   },
 });
 
-// ✅ Export actions
 export const { reset, setAdmin } = adminauthSlice.actions;
 
-// ✅ Export reducer
 export default adminauthSlice.reducer;
