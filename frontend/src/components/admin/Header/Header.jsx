@@ -45,7 +45,7 @@ function Header() {
                 <Link to="/admin/dashboard" reloadDocument>
                 <img
                   src={logo}
-                  alt="pureplantparadise Logo"
+                  alt="bagaicha Logo"
                   className="block w-[120px] h-[48px]"
                 />
                 </Link>
