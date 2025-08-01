@@ -123,7 +123,7 @@ exports.loginAccount = async (req, res, next) => {
     const daysSinceCreation = Math.floor(
       (Date.now() - passwordCreated.getTime()) / (1000 * 60 * 60 * 24)
     );
-    if (daysSinceCreation > 90) {
+    if (daysSinceCreation > 15) {
       return res.status(403).json({
         message: "Your password has expired. Please update your password.",
         expired: true,
